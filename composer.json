@@ -1,17 +1,19 @@
 {
-    "name": "warrence/yii2-kartikgii",
+    "name": "phuongdev89/yii2-kartikgii",
     "description": "Gii Generator base on Kartik-V extension https://github.com/kartik-v",
     "authors": [
         {
-
             "name": "Warrence",
-
             "email": "warrence@gmail.com"
+        },
+        {
+            "name": "Phuong Dev",
+            "email": "phuongdev89@gmail.com"
         }
     ],
     "autoload": {
         "psr-4": {
-            "warrence\\kartikgii\\": ""
+            "phuongdev89\\kartikgii\\": ""
         }
     },
     "require": {
@@ -22,6 +24,7 @@
         "kartik-v/yii2-helpers": "*",
         "kartik-v/yii2-builder": "*",
         "kartik-v/yii2-detail-view": "*",
+        "kartik-v/yii2-date-range": "@dev",
         "php": ">=5.3.0"
     }
 }

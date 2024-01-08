@@ -38,6 +38,7 @@ use yii\data\ActiveDataProvider;
 <?php endif; ?>
 use <?= ltrim($generator->baseControllerClass, '\\') ?>;
 use yii\web\NotFoundHttpException;
+use yii\db\StaleObjectException;
 use yii\filters\VerbFilter;
 
 /**
@@ -45,11 +46,15 @@ use yii\filters\VerbFilter;
  */
 class <?= $controllerClass ?> extends <?= StringHelper::basename($generator->baseControllerClass) . "\n" ?>
 {
+
+    /**
+    * @return array
+    */
     public function behaviors()
     {
         return [
             'verbs' => [
-                'class' => VerbFilter::className(),
+                'class' => VerbFilter::class,
                 'actions' => [
                     'delete' => ['post'],
                 ],
@@ -58,8 +63,8 @@ class <?= $controllerClass ?> extends <?= StringHelper::basename($generator->bas
     }
 
     /**
-     * Lists all <?= $modelClass ?> models.
-     * @return mixed
+    * Lists all <?= $modelClass ?> models.
+     * @return string
      */
     public function actionIndex()
     {
@@ -83,26 +88,27 @@ class <?= $controllerClass ?> extends <?= StringHelper::basename($generator->bas
     }
 
     /**
-     * Displays a single <?= $modelClass ?> model.
-     * <?= implode("\n     * ", $actionParamComments) . "\n" ?>
-     * @return mixed
-     */
+    * Displays a single <?= $modelClass ?> model.
+    * <?= implode("\n     * ", $actionParamComments) . "\n" ?>
+    * @return string|\yii\web\Response
+    * @throws NotFoundHttpException
+    */
     public function actionView(<?= $actionParams ?>)
     {
         $model = $this->findModel(<?= $actionParams ?>);
 
         if ($model->load(Yii::$app->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model-><?=$generator->getTableSchema()->primaryKey[0]?>]);
+            return $this->redirect(['view', 'id' => $model-><?= $generator->getTableSchema()->primaryKey[0] ?>]);
         } else {
             return $this->render('view', ['model' => $model]);
         }
     }
 
     /**
-     * Creates a new <?= $modelClass ?> model.
-     * If creation is successful, the browser will be redirected to the 'view' page.
-     * @return mixed
-     */
+    * Creates a new <?= $modelClass ?> model.
+    * If creation is successful, the browser will be redirected to the 'view' page.
+    * @return string|\yii\web\Response
+    */
     public function actionCreate()
     {
         $model = new <?= $modelClass ?>;
@@ -117,11 +123,12 @@ class <?= $controllerClass ?> extends <?= StringHelper::basename($generator->bas
     }
 
     /**
-     * Updates an existing <?= $modelClass ?> model.
-     * If update is successful, the browser will be redirected to the 'view' page.
-     * <?= implode("\n     * ", $actionParamComments) . "\n" ?>
-     * @return mixed
-     */
+    * Updates an existing <?= $modelClass ?> model.
+    * If update is successful, the browser will be redirected to the 'view' page.
+    * <?= implode("\n     * ", $actionParamComments) . "\n" ?>
+    * @return string|\yii\web\Response
+    * @throws NotFoundHttpException
+    */
     public function actionUpdate(<?= $actionParams ?>)
     {
         $model = $this->findModel(<?= $actionParams ?>);
@@ -136,11 +143,14 @@ class <?= $controllerClass ?> extends <?= StringHelper::basename($generator->bas
     }
 
     /**
-     * Deletes an existing <?= $modelClass ?> model.
-     * If deletion is successful, the browser will be redirected to the 'index' page.
-     * <?= implode("\n     * ", $actionParamComments) . "\n" ?>
-     * @return mixed
-     */
+    * Deletes an existing <?= $modelClass ?> model.
+    * If deletion is successful, the browser will be redirected to the 'index' page.
+    * <?= implode("\n     * ", $actionParamComments) . "\n" ?>
+    * @return \yii\web\Response
+    * @throws NotFoundHttpException
+    * @throws \Throwable
+    * @throws StaleObjectException
+    */
     public function actionDelete(<?= $actionParams ?>)
     {
         $this->findModel(<?= $actionParams ?>)->delete();
@@ -149,25 +159,25 @@ class <?= $controllerClass ?> extends <?= StringHelper::basename($generator->bas
     }
 
     /**
-     * Finds the <?= $modelClass ?> model based on its primary key value.
-     * If the model is not found, a 404 HTTP exception will be thrown.
-     * <?= implode("\n     * ", $actionParamComments) . "\n" ?>
-     * @return <?=                   $modelClass ?> the loaded model
-     * @throws NotFoundHttpException if the model cannot be found
-     */
+    * Finds the <?= $modelClass ?> model based on its primary key value.
+    * If the model is not found, a 404 HTTP exception will be thrown.
+    * <?= implode("\n     * ", $actionParamComments) . "\n" ?>
+    * @return <?= $modelClass ?> the loaded model
+    * @throws NotFoundHttpException if the model cannot be found
+    */
     protected function findModel(<?= $actionParams ?>)
     {
-<?php
-if (count($pks) === 1) {
-    $condition = '$id';
-} else {
-    $condition = [];
-    foreach ($pks as $pk) {
-        $condition[] = "'$pk' => \$$pk";
+    <?php
+    if (count($pks) === 1) {
+        $condition = '$id';
+    } else {
+        $condition = [];
+        foreach ($pks as $pk) {
+            $condition[] = "'$pk' => \$$pk";
+        }
+        $condition = '[' . implode(', ', $condition) . ']';
     }
-    $condition = '[' . implode(', ', $condition) . ']';
-}
-?>
+    ?>
         if (($model = <?= $modelClass ?>::findOne(<?= $condition ?>)) !== null) {
             return $model;
         } else {

@@ -5,8 +5,8 @@ use yii\helpers\StringHelper;
 /**
  * This is the template for generating CRUD search class of the specified model.
  *
- * @var yii\web\View $this
- * @var yii\gii\generators\crud\Generator $generator
+ * @var backend\components\View $this
+ * @var backend\gii\crud\Generator $generator
  */
 
 $modelClass = StringHelper::basename($generator->modelClass);
@@ -18,7 +18,14 @@ $rules = $generator->generateSearchRules();
 $labels = $generator->generateSearchLabels();
 $searchAttributes = $generator->getSearchAttributes();
 $searchConditions = $generator->generateSearchConditions();
-
+$needDateRange = $generator->enableSearchDateRange && in_array('created_at', $searchAttributes) && in_array('updated_at', $searchAttributes);
+if ($needDateRange) {
+    $rules[] = "[
+        ['created_at'],
+        'match',
+        'pattern' => '/^.+\s\-\s.+$/',
+    ]";
+}
 echo "<?php\n";
 ?>
 
@@ -30,38 +37,90 @@ use yii\data\ActiveDataProvider;
 use <?= ltrim($generator->modelClass, '\\') . (isset($modelAlias) ? " as $modelAlias" : "") ?>;
 
 /**
- * <?= $searchModelClass ?> represents the model behind the search form about `<?= $generator->modelClass ?>`.
- */
+* <?= $searchModelClass ?> represents the model behind the search form about `<?= $generator->modelClass ?>`.
+*/
 class <?= $searchModelClass ?> extends <?= isset($modelAlias) ? $modelAlias : $modelClass ?>
-
 {
-    public function rules()
-    {
-        return [
-            <?= implode(",\n            ", $rules) ?>,
-        ];
-    }
+<?php if ($needDateRange): ?>
+    public $createdStart;
+    public $createdEnd;
+<?php endif; ?>
 
-    public function scenarios()
-    {
-        // bypass scenarios() implementation in the parent class
-        return Model::scenarios();
-    }
+/**
+* @inheritDoc
+* @return array
+*/
+public function rules()
+{
+return [
+<?= implode(",\n            ", $rules) ?>,
+];
+}
 
-    public function search($params)
-    {
-        $query = <?= isset($modelAlias) ? $modelAlias : $modelClass ?>::find();
+/**
+* @inheritDoc
+* @return array
+*/
+public function behaviors()
+{
+<?php if ($needDateRange): ?>
+    return [
+    [
+    'class' => \common\behaviors\DateRangeBehavior::className(),
+    'attribute' => 'created_at',
+    'dateStartAttribute' => 'createdStart',
+    'dateEndAttribute' => 'createdEnd',
+    ],
+    ];
+<?php else: ?>
+    return parent::behaviors();
+<?php endif; ?>
+}
 
-        $dataProvider = new ActiveDataProvider([
-            'query' => $query,
-        ]);
 
-        if (!($this->load($params) && $this->validate())) {
-            return $dataProvider;
-        }
+/**
+* @inheritDoc
+* @return array
+*/
+public function scenarios()
+{
+// bypass scenarios() implementation in the parent class
+return Model::scenarios();
+}
 
-        <?= implode("\n        ", $searchConditions) ?>
+/**
+* @param $params
+* @return ActiveDataProvider
+*/
+public function search($params)
+{
+$query = <?= isset($modelAlias) ? $modelAlias : $modelClass ?>::find();
 
-        return $dataProvider;
-    }
+$dataProvider = new ActiveDataProvider([
+'query' => $query,
+'sort' => [
+'defaultOrder' => ['id' => SORT_DESC],
+],
+]);
+
+if (!($this->load($params) && $this->validate())) {
+return $dataProvider;
+}
+
+<?= implode("\n        ", $searchConditions) ?>
+
+<?php if ($needDateRange): ?>
+    $query->andFilterWhere([
+    '>=',
+    'created_at',
+    $this->createdStart,
+    ])
+    ->andFilterWhere([
+    '<',
+    'created_at',
+    $this->createdEnd,
+    ]);
+<?php endif; ?>
+return $dataProvider;
+}
 }

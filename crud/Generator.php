@@ -36,6 +36,7 @@ class Generator extends \yii\gii\generators\crud\Generator
     public $baseControllerClass = 'yii\web\Controller';
     public $indexWidgetType = 'grid';
     public $searchModelClass = '';
+    public $enableSearchDateRange = false;
 
     /**
      * @inheritdoc
@@ -72,7 +73,7 @@ class Generator extends \yii\gii\generators\crud\Generator
             [['indexWidgetType'], 'in', 'range' => ['grid', 'list']],
             [['modelClass'], 'validateModelClass'],
             [['moduleID'], 'validateModuleID'],
-            [['enableI18N'], 'boolean'],
+            [['enableI18N', 'enableSearchDateRange'], 'boolean'],
             [['messageCategory'], 'validateMessageCategory', 'skipOnEmpty' => false],
         ]);
     }
@@ -89,6 +90,7 @@ class Generator extends \yii\gii\generators\crud\Generator
             'baseControllerClass' => 'Base Controller Class',
             'indexWidgetType' => 'Widget Used in Index Page',
             'searchModelClass' => 'Search Model Class',
+            'enableSearchDateRange' => 'Enable search date range',
         ]);
     }
 
@@ -111,6 +113,8 @@ class Generator extends \yii\gii\generators\crud\Generator
                 You may choose either <code>GridView</code> or <code>ListView</code>',
             'searchModelClass' => 'This is the name of the search model class to be generated. You should provide a fully
                 qualified namespaced class name, e.g., <code>app\models\PostSearch</code>.',
+            'enableSearchDateRange' => 'This indicates whether the generator should generate DateRange if the model has 
+                attribute <code>created_at</code> & <code>updated_at</code>'
         ]);
     }
 
