@@ -7,7 +7,7 @@ use yii\helpers\StringHelper;
 
 /**
  * @var yii\web\View $this
- * @var yii\gii\generators\crud\Generator $generator
+ * @var phuongdev89\kartikgii\crud\Generator $generator
  */
 
 /** @var ActiveRecord $model */

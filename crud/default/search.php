@@ -5,8 +5,8 @@ use yii\helpers\StringHelper;
 /**
  * This is the template for generating CRUD search class of the specified model.
  *
- * @var backend\components\View $this
- * @var backend\gii\crud\Generator $generator
+ * @var yii\web\View $this
+ * @var phuongdev89\kartikgii\crud\Generator $generator
  */
 
 $modelClass = StringHelper::basename($generator->modelClass);

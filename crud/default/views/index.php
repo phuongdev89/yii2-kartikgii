@@ -6,7 +6,7 @@ use yii\helpers\StringHelper;
 
 /**
  * @var yii\web\View $this
- * @var yii\gii\generators\crud\Generator $generator
+ * @var phuongdev89\kartikgii\crud\Generator $generator
  */
 
 $urlParams = $generator->generateUrlParams();
@@ -31,7 +31,7 @@ $this->title = <?= $generator->generateString(Inflector::pluralize(Inflector::ca
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="<?= Inflector::camel2id(StringHelper::basename($generator->modelClass)) ?>-index">
-    
+
     <?php if ($generator->indexWidgetType === 'grid'): ?>
         <?= "<?php Pjax::begin(); echo " ?>GridView::widget([
         'dataProvider' => $dataProvider,
@@ -61,6 +61,48 @@ $this->params['breadcrumbs'][] = $this->title;
                     $columnDisplay = "            ['attribute' => '$column->name','format' => ['time',(isset(Yii::\$app->modules['datecontrol']['displaySettings']['time'])) ? Yii::\$app->modules['datecontrol']['displaySettings']['time'] : 'H:i:s A']],";
                 } elseif ($column->type === 'datetime' || $column->type === 'timestamp') {
                     $columnDisplay = "            ['attribute' => '$column->name','format' => ['datetime',(isset(Yii::\$app->modules['datecontrol']['displaySettings']['datetime'])) ? Yii::\$app->modules['datecontrol']['displaySettings']['datetime'] : 'd-m-Y H:i:s A']],";
+                } elseif ($generator->enableSearchDateRange && $column->name == 'user_id') {
+                    $columnDisplay = "
+                    [
+                    'attribute' => 'user_id',
+                    'label' => 'User ID',
+                    'class' => \kartik\grid\DataColumn::class,
+                    'filterType' => \kartik\grid\GridView::FILTER_SELECT2,
+                    'filterWidgetOptions' => [
+                        'data' => \$searchModel->user_id != '' ? \common\helpers\ArrayHelper::map(\backend\models\User::find()->andWhere(['id' => \$searchModel->user_id])->all(), 'id', 'username') : [],
+                        'pluginOptions' => [
+                            'allowClear' => true,
+                            'minimumInputLength' => 3,
+                            'ajax' => [
+                                'url' => \yii\helpers\Url::to(['/ajax/users']),
+                                'dataType' => 'json',
+                                'data' => new \yii\web\JsExpression('function(params) { return {q:params.term}; }'),
+                            ],
+                        ],
+                    ],
+                    'filterInputOptions' => ['placeholder' => 'Search User'],
+                    'format' => 'html',
+                    'value' => function (\$data) {
+                        return \$data->user->username;
+                    },
+                ],
+                    ";
+                } elseif ($generator->enableSearchDateRange && $column->name == 'country_id') {
+                    $columnDisplay = "
+                    [
+                        'class'               => \kartik\grid\DataColumn::class,
+                        'attribute'           => 'country_id',
+                        'filterType'          => \kartik\grid\GridView::FILTER_SELECT2,
+                        'filter'              => ArrayHelper::map(\backend\models\Country::find()->all(), 'id', 'name'),
+                        'filterWidgetOptions' => [
+                            'options' => [
+                                'prompt' => 'Please choose',
+                            ],
+                        ],
+                        'value'               => function (\$data) {
+                            return \$data->country->name;
+                        },
+                    ],";
                 } elseif ($generator->enableSearchDateRange && $column->name == 'created_at') {
                     $columnDisplay = "
                     ['attribute' => 'created_at',

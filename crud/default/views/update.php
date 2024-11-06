@@ -5,7 +5,7 @@ use yii\helpers\StringHelper;
 
 /**
  * @var yii\web\View $this
- * @var yii\gii\generators\crud\Generator $generator
+ * @var phuongdev89\kartikgii\crud\Generator $generator
  */
 
 $urlParams = $generator->generateUrlParams();
@@ -16,9 +16,9 @@ echo "<?php\n";
 use yii\helpers\Html;
 
 /**
- * @var yii\web\View $this
- * @var <?= ltrim($generator->modelClass, '\\') ?> $model
- */
+* @var \yii\web\View $this
+* @var <?= ltrim($generator->modelClass, '\\') ?> $model
+*/
 
 $this->title = <?= $generator->generateString('Update {modelClass}: ', ['modelClass' => Inflector::camel2words(StringHelper::basename($generator->modelClass))]) ?> . ' ' . $model-><?= $generator->getNameAttribute() ?>;
 $this->params['breadcrumbs'][] = ['label' => <?= $generator->generateString(Inflector::pluralize(Inflector::camel2words(StringHelper::basename($generator->modelClass)))) ?>, 'url' => ['index']];
@@ -30,7 +30,7 @@ $this->params['breadcrumbs'][] = <?= $generator->generateString('Update') ?>;
     <h1><?= "<?= " ?>Html::encode($this->title) ?></h1>
 
     <?= "<?= " ?>$this->render('_form', [
-        'model' => $model,
+    'model' => $model,
     ]) ?>
 
 </div>

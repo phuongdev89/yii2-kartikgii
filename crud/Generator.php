@@ -5,12 +5,15 @@
  * @license http://www.yiiframework.com/license/
  */
 
-namespace warrence\kartikgii\crud;
+namespace phuongdev89\kartikgii\crud;
 
 use Yii;
+use yii\base\Model;
 use yii\db\ActiveRecord;
 use yii\db\BaseActiveRecord;
+use yii\db\ColumnSchema;
 use yii\db\Schema;
+use yii\db\TableSchema;
 use yii\gii\CodeFile;
 use yii\helpers\Inflector;
 use yii\web\Controller;
@@ -22,7 +25,7 @@ use yii\web\Controller;
  * @property string $controllerID The controller ID (without the module ID prefix). This property is
  * read-only.
  * @property array $searchAttributes Searchable attributes. This property is read-only.
- * @property boolean|\yii\db\TableSchema $tableSchema This property is read-only.
+ * @property boolean|TableSchema $tableSchema This property is read-only.
  * @property string $viewPath The action view file path. This property is read-only.
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
@@ -35,7 +38,7 @@ class Generator extends \yii\gii\generators\crud\Generator
     public $controllerClass;
     public $baseControllerClass = 'yii\web\Controller';
     public $indexWidgetType = 'grid';
-    public $searchModelClass = '';
+    public $searchModelClass;
     public $enableSearchDateRange = false;
 
     /**
@@ -61,20 +64,101 @@ class Generator extends \yii\gii\generators\crud\Generator
     public function rules()
     {
         return array_merge(parent::rules(), [
-            [['moduleID', 'controllerClass', 'modelClass', 'searchModelClass', 'baseControllerClass'], 'filter', 'filter' => 'trim'],
-            [['modelClass', 'controllerClass', 'baseControllerClass', 'indexWidgetType'], 'required'],
-            [['searchModelClass'], 'compare', 'compareAttribute' => 'modelClass', 'operator' => '!==', 'message' => 'Search Model Class must not be equal to Model Class.'],
-            [['modelClass', 'controllerClass', 'baseControllerClass', 'searchModelClass'], 'match', 'pattern' => '/^[\w\\\\]*$/', 'message' => 'Only word characters and backslashes are allowed.'],
-            [['modelClass'], 'validateClass', 'params' => ['extends' => BaseActiveRecord::className()]],
-            [['baseControllerClass'], 'validateClass', 'params' => ['extends' => Controller::className()]],
-            [['controllerClass'], 'match', 'pattern' => '/Controller$/', 'message' => 'Controller class name must be suffixed with "Controller".'],
-            [['controllerClass'], 'match', 'pattern' => '/(^|\\\\)[A-Z][^\\\\]+Controller$/', 'message' => 'Controller class name must start with an uppercase letter.'],
-            [['controllerClass', 'searchModelClass'], 'validateNewClass'],
-            [['indexWidgetType'], 'in', 'range' => ['grid', 'list']],
-            [['modelClass'], 'validateModelClass'],
-            [['moduleID'], 'validateModuleID'],
-            [['enableI18N', 'enableSearchDateRange'], 'boolean'],
-            [['messageCategory'], 'validateMessageCategory', 'skipOnEmpty' => false],
+            [
+                [
+                    'moduleID',
+                    'controllerClass',
+                    'modelClass',
+                    'searchModelClass',
+                    'baseControllerClass',
+                ],
+                'filter',
+                'filter' => 'trim',
+            ],
+            [
+                [
+                    'modelClass',
+                    'controllerClass',
+                    'baseControllerClass',
+                    'indexWidgetType',
+                ],
+                'required',
+            ],
+            [
+                ['searchModelClass'],
+                'compare',
+                'compareAttribute' => 'modelClass',
+                'operator' => '!==',
+                'message' => 'Search Model Class must not be equal to Model Class.',
+            ],
+            [
+                [
+                    'modelClass',
+                    'controllerClass',
+                    'baseControllerClass',
+                    'searchModelClass',
+                ],
+                'match',
+                'pattern' => '/^[\w\\\\]*$/',
+                'message' => 'Only word characters and backslashes are allowed.',
+            ],
+            [
+                ['modelClass'],
+                'validateClass',
+                'params' => ['extends' => BaseActiveRecord::class],
+            ],
+            [
+                ['baseControllerClass'],
+                'validateClass',
+                'params' => ['extends' => Controller::class],
+            ],
+            [
+                ['controllerClass'],
+                'match',
+                'pattern' => '/Controller$/',
+                'message' => 'Controller class name must be suffixed with "Controller".',
+            ],
+            [
+                ['controllerClass'],
+                'match',
+                'pattern' => '/(^|\\\\)[A-Z][^\\\\]+Controller$/',
+                'message' => 'Controller class name must start with an uppercase letter.',
+            ],
+            [
+                [
+                    'controllerClass',
+                    'searchModelClass',
+                ],
+                'validateNewClass',
+            ],
+            [
+                ['indexWidgetType'],
+                'in',
+                'range' => [
+                    'grid',
+                    'list',
+                ],
+            ],
+            [
+                ['modelClass'],
+                'validateModelClass',
+            ],
+            [
+                ['moduleID'],
+                'validateModuleID',
+            ],
+            [
+                [
+                    'enableI18N',
+                    'enableSearchDateRange',
+                ],
+                'boolean',
+            ],
+            [
+                ['messageCategory'],
+                'validateMessageCategory',
+                'skipOnEmpty' => false,
+            ],
         ]);
     }
 
@@ -113,8 +197,7 @@ class Generator extends \yii\gii\generators\crud\Generator
                 You may choose either <code>GridView</code> or <code>ListView</code>',
             'searchModelClass' => 'This is the name of the search model class to be generated. You should provide a fully
                 qualified namespaced class name, e.g., <code>app\models\PostSearch</code>.',
-            'enableSearchDateRange' => 'This indicates whether the generator should generate DateRange if the model has 
-                attribute <code>created_at</code> & <code>updated_at</code>'
+            'enableSearchDateRange' => 'This indicates whether the generator should generate DateRange if the model has attribute <code>created_at</code> & <code>updated_at</code>',
         ]);
     }
 
@@ -131,7 +214,11 @@ class Generator extends \yii\gii\generators\crud\Generator
      */
     public function stickyAttributes()
     {
-        return array_merge(parent::stickyAttributes(), ['baseControllerClass', 'moduleID', 'indexWidgetType']);
+        return array_merge(parent::stickyAttributes(), [
+            'baseControllerClass',
+            'moduleID',
+            'indexWidgetType',
+        ]);
     }
 
     /**
@@ -208,7 +295,7 @@ class Generator extends \yii\gii\generators\crud\Generator
     {
         $module = empty($this->moduleID) ? Yii::$app : Yii::$app->getModule($this->moduleID);
 
-        return $module->getViewPath() . '/' . $this->getControllerID() ;
+        return $module->getViewPath() . '/' . $this->getControllerID();
     }
 
     public function getNameAttribute()
@@ -218,7 +305,7 @@ class Generator extends \yii\gii\generators\crud\Generator
                 return $name;
             }
         }
-        /** @var \yii\db\ActiveRecord $class */
+        /** @var ActiveRecord $class */
         $class = $this->modelClass;
         $pk = $class::primaryKey();
 
@@ -237,26 +324,26 @@ class Generator extends \yii\gii\generators\crud\Generator
         $tableSchema = $this->getTableSchema();
         if ($tableSchema === false || !isset($tableSchema->columns[$attribute])) {
             if (preg_match('/^(password|pass|passwd|passcode)$/i', $attribute)) {
-                return "'$attribute' => ['type' => TabularForm::INPUT_PASSWORD,'options' => ['placeholder' => 'Enter ".$attributeLabels[$attribute]."...']],";
+                return "'$attribute' => ['type' => TabularForm::INPUT_PASSWORD,'options' => ['placeholder' => 'Enter " . $attributeLabels[$attribute] . "...']],";
                 //return "\$form->field(\$model, '$attribute')->passwordInput()";
             } else {
-                return "'$attribute' => ['type' => TabularForm::INPUT_TEXT, 'options' => ['placeholder' => 'Enter ".$attributeLabels[$attribute]."...']],";
+                return "'$attribute' => ['type' => TabularForm::INPUT_TEXT, 'options' => ['placeholder' => 'Enter " . $attributeLabels[$attribute] . "...']],";
                 //return "\$form->field(\$model, '$attribute')";
             }
         }
         $column = $tableSchema->columns[$attribute];
         if ($column->phpType === 'boolean') {
             //return "\$form->field(\$model, '$attribute')->checkbox()";
-            return "'$attribute' => ['type' => Form::INPUT_CHECKBOX, 'options' => ['placeholder' => 'Enter ".$attributeLabels[$attribute]."...']],";
+            return "'$attribute' => ['type' => Form::INPUT_CHECKBOX, 'options' => ['placeholder' => 'Enter " . $attributeLabels[$attribute] . "...']],";
         } elseif ($column->type === 'text') {
             //return "\$form->field(\$model, '$attribute')->textarea(['rows' => 6])";
-            return "'$attribute' => ['type' => Form::INPUT_TEXTAREA, 'options' => ['placeholder' => 'Enter ".$attributeLabels[$attribute]."...','rows' => 6]],";
+            return "'$attribute' => ['type' => Form::INPUT_TEXTAREA, 'options' => ['placeholder' => 'Enter " . $attributeLabels[$attribute] . "...','rows' => 6]],";
         } elseif ($column->type === 'date') {
-            return "'$attribute' => ['type' => Form::INPUT_WIDGET, 'widgetClass' => DateControl::classname(),'options' => ['type' => DateControl::FORMAT_DATE]],";
+            return "'$attribute' => ['type' => Form::INPUT_WIDGET, 'widgetClass' => DateControl::class,'options' => ['type' => DateControl::FORMAT_DATE]],";
         } elseif ($column->type === 'time') {
-            return "'$attribute' => ['type' => Form::INPUT_WIDGET, 'widgetClass' => DateControl::classname(),'options' => ['type' => DateControl::FORMAT_TIME]],";
+            return "'$attribute' => ['type' => Form::INPUT_WIDGET, 'widgetClass' => DateControl::class,'options' => ['type' => DateControl::FORMAT_TIME]],";
         } elseif ($column->type === 'datetime' || $column->type === 'timestamp') {
-            return "'$attribute' => ['type' => Form::INPUT_WIDGET, 'widgetClass' => DateControl::classname(),'options' => ['type' => DateControl::FORMAT_DATETIME]],";
+            return "'$attribute' => ['type' => Form::INPUT_WIDGET, 'widgetClass' => DateControl::class,'options' => ['type' => DateControl::FORMAT_DATETIME]],";
         } else {
             if (preg_match('/^(password|pass|passwd|passcode)$/i', $column->name)) {
                 $input = 'INPUT_PASSWORD';
@@ -265,10 +352,10 @@ class Generator extends \yii\gii\generators\crud\Generator
             }
             if ($column->phpType !== 'string' || $column->size === null) {
                 //return "\$form->field(\$model, '$attribute')->$input()";
-                return "'$attribute' => ['type' => Form::".$input.", 'options' => ['placeholder' => 'Enter ".$attributeLabels[$attribute]."...']],";
+                return "'$attribute' => ['type' => Form::" . $input . ", 'options' => ['placeholder' => 'Enter " . $attributeLabels[$attribute] . "...']],";
             } else {
                 //return "\$form->field(\$model, '$attribute')->$input(['maxlength' => $column->size])";
-                return "'$attribute' => ['type' => Form::".$input.", 'options' => ['placeholder' => 'Enter ".$attributeLabels[$attribute]."...', 'maxlength' => ".$column->size."]],";
+                return "'$attribute' => ['type' => Form::" . $input . ", 'options' => ['placeholder' => 'Enter " . $attributeLabels[$attribute] . "...', 'maxlength' => " . $column->size . "]],";
             }
         }
     }
@@ -294,7 +381,7 @@ class Generator extends \yii\gii\generators\crud\Generator
 
     /**
      * Generates column format
-     * @param \yii\db\ColumnSchema $column
+     * @param ColumnSchema $column
      * @return string
      */
     public function generateColumnFormat($column)
@@ -371,7 +458,7 @@ class Generator extends \yii\gii\generators\crud\Generator
      */
     public function generateSearchLabels()
     {
-        /** @var \yii\base\Model $model */
+        /** @var Model $model */
         $model = new $this->modelClass();
         $attributeLabels = $model->attributeLabels();
         $labels = [];
@@ -403,7 +490,7 @@ class Generator extends \yii\gii\generators\crud\Generator
         $columns = [];
         if (($table = $this->getTableSchema()) === false) {
             $class = $this->modelClass;
-            /** @var \yii\base\Model $model */
+            /** @var Model $model */
             $model = new $class();
             foreach ($model->attributes() as $attribute) {
                 $columns[$attribute] = 'unknown';
@@ -526,7 +613,7 @@ class Generator extends \yii\gii\generators\crud\Generator
 
     /**
      * Returns table schema for current model class or false if it is not an active record
-     * @return boolean|\yii\db\TableSchema
+     * @return boolean|TableSchema
      */
     public function getTableSchema()
     {
@@ -549,7 +636,7 @@ class Generator extends \yii\gii\generators\crud\Generator
         if (is_subclass_of($class, 'yii\db\ActiveRecord')) {
             return $class::getTableSchema()->getColumnNames();
         } else {
-            /** @var \yii\base\Model $model */
+            /** @var Model $model */
             $model = new $class();
 
             return $model->attributes();
