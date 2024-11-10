@@ -8,6 +8,7 @@
 namespace phuongdev89\kartikgii\crud;
 
 use Yii;
+use yii\base\InvalidConfigException;
 use yii\base\Model;
 use yii\db\ActiveRecord;
 use yii\db\BaseActiveRecord;
@@ -40,6 +41,7 @@ class Generator extends \yii\gii\generators\crud\Generator
     public $indexWidgetType = 'grid';
     public $searchModelClass;
     public $enableSearchDateRange = false;
+    public $searchDateFields = 'created_at';
 
     /**
      * @inheritdoc
@@ -159,6 +161,11 @@ class Generator extends \yii\gii\generators\crud\Generator
                 'validateMessageCategory',
                 'skipOnEmpty' => false,
             ],
+            [
+                ['searchDateFields'],
+                'validateSearchDateFields',
+                'skipOnEmpty' => false,
+            ],
         ]);
     }
 
@@ -198,6 +205,7 @@ class Generator extends \yii\gii\generators\crud\Generator
             'searchModelClass' => 'This is the name of the search model class to be generated. You should provide a fully
                 qualified namespaced class name, e.g., <code>app\models\PostSearch</code>.',
             'enableSearchDateRange' => 'This indicates whether the generator should generate DateRange if the model has attribute <code>created_at</code> & <code>updated_at</code>',
+            'searchDateFields' => 'This is the search date fields to enable searchDateRange. Those columns should be <code>int(10)</code>. Example: <code>created_at</code> or <code>created_at,updated_at</code>',
         ]);
     }
 
@@ -243,6 +251,24 @@ class Generator extends \yii\gii\generators\crud\Generator
             $module = Yii::$app->getModule($this->moduleID);
             if ($module === null) {
                 $this->addError('moduleID', "Module '{$this->moduleID}' does not exist.");
+            }
+        }
+    }
+
+    /**
+     * @return void
+     */
+    public function validateSearchDateFields()
+    {
+        if ($this->enableSearchDateRange) {
+            if (empty($this->searchDateFields)) {
+                $this->addError('searchDateFields', 'search Date Fields cannot be blank.');
+            }
+            $searchDateFields = explode(',', $this->searchDateFields);
+            foreach ($searchDateFields as $searchDateField) {
+                if (!in_array($searchDateField, $this->columnNames)) {
+                    $this->addError('searchDateFields', "Column name '{$searchDateField}' is not in schema.");
+                }
             }
         }
     }
@@ -298,6 +324,10 @@ class Generator extends \yii\gii\generators\crud\Generator
         return $module->getViewPath() . '/' . $this->getControllerID();
     }
 
+    /**
+     * @return mixed|string
+     * @throws InvalidConfigException
+     */
     public function getNameAttribute()
     {
         foreach ($this->getColumnNames() as $name) {
@@ -316,6 +346,7 @@ class Generator extends \yii\gii\generators\crud\Generator
      * Generates code for active field
      * @param string $attribute
      * @return string
+     * @throws InvalidConfigException
      */
     public function generateActiveField($attribute)
     {
@@ -325,18 +356,14 @@ class Generator extends \yii\gii\generators\crud\Generator
         if ($tableSchema === false || !isset($tableSchema->columns[$attribute])) {
             if (preg_match('/^(password|pass|passwd|passcode)$/i', $attribute)) {
                 return "'$attribute' => ['type' => TabularForm::INPUT_PASSWORD,'options' => ['placeholder' => 'Enter " . $attributeLabels[$attribute] . "...']],";
-                //return "\$form->field(\$model, '$attribute')->passwordInput()";
             } else {
                 return "'$attribute' => ['type' => TabularForm::INPUT_TEXT, 'options' => ['placeholder' => 'Enter " . $attributeLabels[$attribute] . "...']],";
-                //return "\$form->field(\$model, '$attribute')";
             }
         }
         $column = $tableSchema->columns[$attribute];
         if ($column->phpType === 'boolean') {
-            //return "\$form->field(\$model, '$attribute')->checkbox()";
             return "'$attribute' => ['type' => Form::INPUT_CHECKBOX, 'options' => ['placeholder' => 'Enter " . $attributeLabels[$attribute] . "...']],";
         } elseif ($column->type === 'text') {
-            //return "\$form->field(\$model, '$attribute')->textarea(['rows' => 6])";
             return "'$attribute' => ['type' => Form::INPUT_TEXTAREA, 'options' => ['placeholder' => 'Enter " . $attributeLabels[$attribute] . "...','rows' => 6]],";
         } elseif ($column->type === 'date') {
             return "'$attribute' => ['type' => Form::INPUT_WIDGET, 'widgetClass' => DateControl::class,'options' => ['type' => DateControl::FORMAT_DATE]],";
@@ -351,10 +378,8 @@ class Generator extends \yii\gii\generators\crud\Generator
                 $input = 'INPUT_TEXT';
             }
             if ($column->phpType !== 'string' || $column->size === null) {
-                //return "\$form->field(\$model, '$attribute')->$input()";
                 return "'$attribute' => ['type' => Form::" . $input . ", 'options' => ['placeholder' => 'Enter " . $attributeLabels[$attribute] . "...']],";
             } else {
-                //return "\$form->field(\$model, '$attribute')->$input(['maxlength' => $column->size])";
                 return "'$attribute' => ['type' => Form::" . $input . ", 'options' => ['placeholder' => 'Enter " . $attributeLabels[$attribute] . "...', 'maxlength' => " . $column->size . "]],";
             }
         }
@@ -364,6 +389,7 @@ class Generator extends \yii\gii\generators\crud\Generator
      * Generates code for active search field
      * @param string $attribute
      * @return string
+     * @throws InvalidConfigException
      */
     public function generateActiveSearchField($attribute)
     {
@@ -404,6 +430,7 @@ class Generator extends \yii\gii\generators\crud\Generator
     /**
      * Generates validation rules for the search model.
      * @return array the generated validation rules
+     * @throws InvalidConfigException
      */
     public function generateSearchRules()
     {
@@ -446,6 +473,7 @@ class Generator extends \yii\gii\generators\crud\Generator
 
     /**
      * @return array searchable attributes
+     * @throws InvalidConfigException
      */
     public function getSearchAttributes()
     {
@@ -455,6 +483,7 @@ class Generator extends \yii\gii\generators\crud\Generator
     /**
      * Generates the attribute labels for the search model.
      * @return array the generated attribute labels (name => label)
+     * @throws InvalidConfigException
      */
     public function generateSearchLabels()
     {
@@ -484,6 +513,7 @@ class Generator extends \yii\gii\generators\crud\Generator
     /**
      * Generates search conditions
      * @return array
+     * @throws InvalidConfigException
      */
     public function generateSearchConditions()
     {
@@ -498,6 +528,14 @@ class Generator extends \yii\gii\generators\crud\Generator
         } else {
             foreach ($table->columns as $column) {
                 $columns[$column->name] = $column->type;
+            }
+        }
+
+        if ($this->enableSearchDateRange) {
+            foreach ($this->getAllSearchDateRangeFields() as $searchDateRangeField) {
+                if (isset($columns[$searchDateRangeField])) {
+                    unset($columns[$searchDateRangeField]);
+                }
             }
         }
 
@@ -585,6 +623,7 @@ class Generator extends \yii\gii\generators\crud\Generator
     /**
      * Generates parameter tags for phpdoc
      * @return array parameter tags for phpdoc
+     * @throws InvalidConfigException
      */
     public function generateActionParamComments()
     {
@@ -614,6 +653,7 @@ class Generator extends \yii\gii\generators\crud\Generator
     /**
      * Returns table schema for current model class or false if it is not an active record
      * @return boolean|TableSchema
+     * @throws InvalidConfigException
      */
     public function getTableSchema()
     {
@@ -628,6 +668,7 @@ class Generator extends \yii\gii\generators\crud\Generator
 
     /**
      * @return array model column names
+     * @throws InvalidConfigException
      */
     public function getColumnNames()
     {
@@ -636,10 +677,17 @@ class Generator extends \yii\gii\generators\crud\Generator
         if (is_subclass_of($class, 'yii\db\ActiveRecord')) {
             return $class::getTableSchema()->getColumnNames();
         } else {
-            /** @var Model $model */
             $model = new $class();
 
             return $model->attributes();
         }
+    }
+
+    /**
+     * @return false|string[]
+     */
+    public function getAllSearchDateRangeFields()
+    {
+        return explode(',', $this->searchDateFields);
     }
 }

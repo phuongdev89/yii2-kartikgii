@@ -1,16 +1,17 @@
 <?php
 
+use phuongdev89\kartikgii\crud\Generator;
 use yii\db\ActiveRecord;
 use yii\helpers\Inflector;
 use yii\helpers\StringHelper;
+use yii\web\View;
 
 
 /**
- * @var yii\web\View $this
- * @var phuongdev89\kartikgii\crud\Generator $generator
+ * @var View $this
+ * @var Generator $generator
+ * @var ActiveRecord $model
  */
-
-/** @var ActiveRecord $model */
 $model = new $generator->modelClass;
 $safeAttributes = $model->safeAttributes();
 if (empty($safeAttributes)) {
@@ -28,7 +29,7 @@ use kartik\datecontrol\DateControl;
 
 /**
 * @var \yii\web\View $this
-* @var <?= ltrim($generator->modelClass, '\\') ?> $model
+* @var \<?= ltrim($generator->modelClass, '\\') ?> $model
 * @var \yii\widgets\ActiveForm $form
 */
 ?>

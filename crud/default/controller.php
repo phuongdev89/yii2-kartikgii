@@ -1,13 +1,15 @@
 <?php
 
+use phuongdev89\kartikgii\crud\Generator;
 use yii\db\ActiveRecordInterface;
 use yii\helpers\StringHelper;
+use yii\web\View;
 
 /**
  * This is the template for generating a CRUD controller class file.
  *
- * @var yii\web\View $this
- * @var phuongdev89\kartikgii\crud\Generator $generator
+ * @var View $this
+ * @var Generator $generator
  */
 
 $controllerClass = StringHelper::basename($generator->controllerClass);
@@ -40,6 +42,7 @@ use <?= ltrim($generator->baseControllerClass, '\\') ?>;
 use yii\web\NotFoundHttpException;
 use yii\db\StaleObjectException;
 use yii\filters\VerbFilter;
+use yii\db\Exception;
 
 /**
 * <?= $controllerClass ?> implements the CRUD actions for <?= $modelClass ?> model.
@@ -91,7 +94,7 @@ public function actionIndex()
 * Displays a single <?= $modelClass ?> model.
 * <?= implode("\n     * ", $actionParamComments) . "\n" ?>
 * @return string|\yii\web\Response
-* @throws NotFoundHttpException
+* @throws NotFoundHttpException|Exception
 */
 public function actionView(<?= $actionParams ?>)
 {
@@ -108,6 +111,7 @@ return $this->render('view', ['model' => $model]);
 * Creates a new <?= $modelClass ?> model.
 * If creation is successful, the browser will be redirected to the 'view' page.
 * @return string|\yii\web\Response
+* @throws Exception
 */
 public function actionCreate()
 {
@@ -127,7 +131,7 @@ return $this->render('create', [
 * If update is successful, the browser will be redirected to the 'view' page.
 * <?= implode("\n     * ", $actionParamComments) . "\n" ?>
 * @return string|\yii\web\Response
-* @throws NotFoundHttpException
+* @throws NotFoundHttpException|Exception
 */
 public function actionUpdate(<?= $actionParams ?>)
 {

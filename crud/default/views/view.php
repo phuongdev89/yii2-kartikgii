@@ -1,11 +1,13 @@
 <?php
 
+use phuongdev89\kartikgii\crud\Generator;
 use yii\helpers\Inflector;
 use yii\helpers\StringHelper;
+use yii\web\View;
 
 /**
- * @var yii\web\View $this
- * @var phuongdev89\kartikgii\crud\Generator $generator
+ * @var View $this
+ * @var Generator $generator
  */
 
 $urlParams = $generator->generateUrlParams();
@@ -19,7 +21,7 @@ use kartik\datecontrol\DateControl;
 
 /**
 * @var \yii\web\View $this
-* @var <?= ltrim($generator->modelClass, '\\') ?> $model
+* @var \<?= ltrim($generator->modelClass, '\\') ?> $model
 */
 
 $this->title = $model-><?= $generator->getNameAttribute() ?>;

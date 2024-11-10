@@ -1,11 +1,13 @@
 <?php
 
+use phuongdev89\kartikgii\crud\Generator;
 use yii\helpers\Inflector;
 use yii\helpers\StringHelper;
+use yii\web\View;
 
 /**
- * @var yii\web\View $this
- * @var phuongdev89\kartikgii\crud\Generator $generator
+ * @var View $this
+ * @var Generator $generator
  */
 
 echo "<?php\n";
@@ -16,7 +18,7 @@ use yii\widgets\ActiveForm;
 
 /**
 * @var \yii\web\View $this
-* @var <?= ltrim($generator->searchModelClass, '\\') ?> $model
+* @var \<?= ltrim($generator->searchModelClass, '\\') ?> $model
 * @var \yii\widgets\ActiveForm $form
 */
 ?>

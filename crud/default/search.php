@@ -1,12 +1,14 @@
 <?php
 
+use phuongdev89\kartikgii\crud\Generator;
 use yii\helpers\StringHelper;
+use yii\web\View;
 
 /**
  * This is the template for generating CRUD search class of the specified model.
  *
- * @var yii\web\View $this
- * @var phuongdev89\kartikgii\crud\Generator $generator
+ * @var View $this
+ * @var Generator $generator
  */
 
 $modelClass = StringHelper::basename($generator->modelClass);
@@ -18,13 +20,14 @@ $rules = $generator->generateSearchRules();
 $labels = $generator->generateSearchLabels();
 $searchAttributes = $generator->getSearchAttributes();
 $searchConditions = $generator->generateSearchConditions();
-$needDateRange = $generator->enableSearchDateRange && in_array('created_at', $searchAttributes) && in_array('updated_at', $searchAttributes);
-if ($needDateRange) {
-    $rules[] = "[
-        ['created_at'],
-        'match',
-        'pattern' => '/^.+\s\-\s.+$/',
-    ]";
+if ($generator->enableSearchDateRange) {
+    foreach ($generator->getAllSearchDateRangeFields() as $searchDateRangeField) {
+        $rules[] = "[
+            ['$searchDateRangeField'],
+            'match',
+            'pattern' => '/^.+\s\-\s.+$/',
+        ]";
+    }
 }
 echo "<?php\n";
 ?>
@@ -35,15 +38,19 @@ use Yii;
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
 use <?= ltrim($generator->modelClass, '\\') . (isset($modelAlias) ? " as $modelAlias" : "") ?>;
+use phuongdev89\kartikgii\behaviors\DateRangeBehavior;
 
 /**
 * <?= $searchModelClass ?> represents the model behind the search form about `<?= $generator->modelClass ?>`.
 */
 class <?= $searchModelClass ?> extends <?= isset($modelAlias) ? $modelAlias : $modelClass ?>
 {
-<?php if ($needDateRange): ?>
-    public $createdStart;
-    public $createdEnd;
+<?php if ($generator->enableSearchDateRange): ?>
+    <?php foreach ($generator->getAllSearchDateRangeFields() as $searchDateRangeField): ?>
+        public $<?= $searchDateRangeField ?>_start;
+        public $<?= $searchDateRangeField ?>_end;
+
+    <?php endforeach; ?>
 <?php endif; ?>
 
 /**
@@ -63,20 +70,21 @@ return [
 */
 public function behaviors()
 {
-<?php if ($needDateRange): ?>
+<?php if ($generator->enableSearchDateRange): ?>
     return [
-    [
-    'class' => \common\behaviors\DateRangeBehavior::className(),
-    'attribute' => 'created_at',
-    'dateStartAttribute' => 'createdStart',
-    'dateEndAttribute' => 'createdEnd',
-    ],
+    <?php foreach ($generator->getAllSearchDateRangeFields() as $searchDateRangeField): ?>
+        [
+        'class' => DateRangeBehavior::class,
+        'attribute' => '<?= $searchDateRangeField ?>',
+        'dateStartAttribute' => '<?= $searchDateRangeField ?>_start',
+        'dateEndAttribute' => '<?= $searchDateRangeField ?>_end',
+        ],
+    <?php endforeach; ?>
     ];
 <?php else: ?>
     return parent::behaviors();
 <?php endif; ?>
 }
-
 
 /**
 * @inheritDoc
@@ -109,17 +117,19 @@ return $dataProvider;
 
 <?= implode("\n        ", $searchConditions) ?>
 
-<?php if ($needDateRange): ?>
-    $query->andFilterWhere([
-    '>=',
-    'created_at',
-    $this->createdStart,
-    ])
-    ->andFilterWhere([
-    '<',
-    'created_at',
-    $this->createdEnd,
-    ]);
+<?php if ($generator->enableSearchDateRange): ?>
+    <?php foreach ($generator->getAllSearchDateRangeFields() as $searchDateRangeField): ?>
+        $query->andFilterWhere([
+        '>=',
+        '<?= $searchDateRangeField ?>',
+        $this-><?= $searchDateRangeField ?>_start,
+        ])
+        ->andFilterWhere([
+        '<',
+        '<?= $searchDateRangeField ?>',
+        $this-><?= $searchDateRangeField ?>_end,
+        ]);
+    <?php endforeach; ?>
 <?php endif; ?>
 return $dataProvider;
 }

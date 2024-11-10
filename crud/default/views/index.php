@@ -1,12 +1,14 @@
 <?php
 
+use phuongdev89\kartikgii\crud\Generator;
 use yii\helpers\Inflector;
 use yii\helpers\StringHelper;
+use yii\web\View;
 
 
 /**
- * @var yii\web\View $this
- * @var phuongdev89\kartikgii\crud\Generator $generator
+ * @var View $this
+ * @var Generator $generator
  */
 
 $urlParams = $generator->generateUrlParams();
@@ -103,9 +105,9 @@ $this->params['breadcrumbs'][] = $this->title;
                             return \$data->country->name;
                         },
                     ],";
-                } elseif ($generator->enableSearchDateRange && $column->name == 'created_at') {
+                } elseif ($generator->enableSearchDateRange && in_array($column->name, $generator->getAllSearchDateRangeFields())) {
                     $columnDisplay = "
-                    ['attribute' => 'created_at',
+                    ['attribute' => '{$column->name}',
                 'class' => \kartik\grid\DataColumn::class,
                 'filterType' => \kartik\grid\GridView::FILTER_DATE_RANGE,
                 'format'=>'datetime',
