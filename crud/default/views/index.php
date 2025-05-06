@@ -89,22 +89,6 @@ $this->params['breadcrumbs'][] = $this->title;
                     },
                 ],
                     ";
-                } elseif ($generator->enableSearchDateRange && $column->name == 'country_id') {
-                    $columnDisplay = "
-                    [
-                        'class'               => \kartik\grid\DataColumn::class,
-                        'attribute'           => 'country_id',
-                        'filterType'          => \kartik\grid\GridView::FILTER_SELECT2,
-                        'filter'              => ArrayHelper::map(\backend\models\Country::find()->all(), 'id', 'name'),
-                        'filterWidgetOptions' => [
-                            'options' => [
-                                'prompt' => 'Please choose',
-                            ],
-                        ],
-                        'value'               => function (\$data) {
-                            return \$data->country->name;
-                        },
-                    ],";
                 } elseif ($generator->enableSearchDateRange && in_array($column->name, $generator->getAllSearchDateRangeFields())) {
                     $columnDisplay = "
                     ['attribute' => '{$column->name}',
@@ -129,7 +113,7 @@ $this->params['breadcrumbs'][] = $this->title;
         }
         ?>
         [
-        'class' => 'backend\grid\ActionColumn',
+        'class' => \phuongdev89\base\grid\ActionColumn::class,
         'width' => '150px',
         ],
         ],
